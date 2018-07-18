@@ -17,6 +17,7 @@ import csv, sys
 
 params = [
     "name",
+    "layer_type",
     "batch_input_shape",
     "filters",
     "kernel_size",
@@ -31,14 +32,18 @@ def extract_configs(model,name):
     list_config = []
     for layer in model.layers:
         dict_layer = layer.get_config()
+        print (layer.name)
         dict_layer['batch_input_shape']=layer.get_output_at(0).get_shape() #add input shape for hidder layers
+        dict_layer['layer_type'] = (str(layer).split()[0]).split('.')[-1] #ex: Add, Conv2D ,...
         list_config.append(dict_layer)
+
     keys=[]
     for layer in model.layers: #get union of keys (input layer has different keys)
         keys=list(set().union(keys,layer.get_config().keys()))
     
     #sort parmaters to be write in the csv file
     #params.reverse()
+    keys.append("layer_type")
     for param in params[::-1]:
         keys.insert(0, keys.pop(keys.index(param)))
 
@@ -48,21 +53,17 @@ def extract_configs(model,name):
         dict_writer.writerows(list_config)
 
 
-if not len(sys.argv) == 2:
-    print("error in argument: python extract_params.py [network]")
-    print("ex: python extract_params.py vgg19")
-    print("[networks]: vgg16, vgg19,resnet50")
-    exit() 
+model = VGG16   (include_top=True, weights='imagenet', input_tensor=None, input_shape=(224,224,3), pooling=None, classes=1000)
+print('**********************************vgg16**************************************')
+extract_configs(model,'vgg16')
 
-print ("***************network is" + sys.argv[1]+"************")
-if (sys.argv[1] == "vgg16"):
-    model = VGG19	(include_top=True, weights='imagenet', input_tensor=None, input_shape=(224,224,3), pooling=None, classes=1000)
-elif (sys.argv[1] == "vgg19"):
-    model = VGG19	(include_top=True, weights='imagenet', input_tensor=None, input_shape=(224,224,3), pooling=None, classes=1000)
-elif (sys.argv[1] == "resent50"):
-    model = ResNet50	(include_top=True, weights='imagenet', input_tensor=None, input_shape=(224,224,3), pooling=None, classes=1000)
-else:
-    print("***invalid network!!!!")
-    exit()
 
-extract_configs(model,sys.argv[1])
+
+model = VGG19   (include_top=True, weights='imagenet', input_tensor=None, input_shape=(224,224,3), pooling=None, classes=1000)
+print('**********************************vgg19**************************************')
+extract_configs(model,'vgg19')
+
+
+model = ResNet50(include_top=True, weights='imagenet', input_tensor=None, input_shape=(224,224,3), pooling=None, classes=1000)
+print('**********************************resnet50***********************************')
+extract_configs(model,'resent50')
