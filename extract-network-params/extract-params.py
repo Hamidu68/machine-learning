@@ -19,6 +19,7 @@ params = [
     "name",
     "layer_type",
     "batch_input_shape",
+    "batch_output_shape",
     "filters",
     "kernel_size",
     "activation",
@@ -33,17 +34,23 @@ def extract_configs(model,name):
     for layer in model.layers:
         dict_layer = layer.get_config()
         print (layer.name)
-        dict_layer['batch_input_shape']=layer.get_output_at(0).get_shape() #add input shape for hidder layers
-        dict_layer['layer_type'] = (str(layer).split()[0]).split('.')[-1] #ex: Add, Conv2D ,...
+     #   exit()
+        dict_layer['batch_input_shape'] = layer.input_shape
+        dict_layer['batch_output_shape']= layer.output_shape #add output shape for hidder layers
+        dict_layer['layer_type'] = (str(layer).split()[0]).split('.')[-1]
         list_config.append(dict_layer)
 
     keys=[]
     for layer in model.layers: #get union of keys (input layer has different keys)
         keys=list(set().union(keys,layer.get_config().keys()))
     
+    #add new params to keys! (new params that are not exists in summary of Keras)
+    for param in params:
+        if param not in keys:
+            keys.append(param)
+
     #sort parmaters to be write in the csv file
-    #params.reverse()
-    keys.append("layer_type")
+    #params.reverse()        
     for param in params[::-1]:
         keys.insert(0, keys.pop(keys.index(param)))
 
